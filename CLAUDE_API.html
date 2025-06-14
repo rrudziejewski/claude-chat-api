@@ -195,14 +195,18 @@
         </div>
     </div>
 
-    <!-- This will be loaded from config.js -->
-    <script src="config.js"></script>
-    
     <script>
-        // Check if API key is loaded
-        if (!window.CLAUDE_API_KEY) {
-            document.getElementById('errorDiv').style.display = 'block';
-            document.getElementById('errorDiv').innerHTML = 'Error: API key not found. Make sure config.js file exists and contains your API key.';
+        // API Key management - prompts user for key on first use
+        let CLAUDE_API_KEY = localStorage.getItem('claude-api-key');
+        
+        if (!CLAUDE_API_KEY) {
+            CLAUDE_API_KEY = prompt('Please enter your Claude API key (starts with sk-ant-):');
+            if (CLAUDE_API_KEY && CLAUDE_API_KEY.startsWith('sk-ant-')) {
+                localStorage.setItem('claude-api-key', CLAUDE_API_KEY);
+            } else {
+                document.getElementById('errorDiv').style.display = 'block';
+                document.getElementById('errorDiv').innerHTML = 'Invalid API key. Please refresh and enter a valid key starting with sk-ant-';
+            }
         }
 
         const messagesDiv = document.getElementById('messages');
@@ -286,8 +290,8 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
-            if (!window.CLAUDE_API_KEY) {
-                showError('API key not configured. Check your config.js file.');
+            if (!CLAUDE_API_KEY) {
+                showError('API key not configured. Please refresh the page and enter your API key.');
                 return;
             }
 
@@ -308,8 +312,9 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': window.CLAUDE_API_KEY,
-                        'anthropic-version': '2023-06-01'
+                        'x-api-key': CLAUDE_API_KEY,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
                     },
                     body: JSON.stringify({
                         model: 'claude-3-5-sonnet-20241022',
