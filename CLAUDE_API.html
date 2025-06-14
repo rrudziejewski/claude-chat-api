@@ -195,18 +195,14 @@
         </div>
     </div>
 
+    <!-- This will be loaded from config.js -->
+    <script src="config.js"></script>
+    
     <script>
-        // API Key management - prompts user for key on first use
-        let CLAUDE_API_KEY = localStorage.getItem('claude-api-key');
-        
-        if (!CLAUDE_API_KEY) {
-            CLAUDE_API_KEY = prompt('Please enter your Claude API key (starts with sk-ant-):');
-            if (CLAUDE_API_KEY && CLAUDE_API_KEY.startsWith('sk-ant-')) {
-                localStorage.setItem('claude-api-key', CLAUDE_API_KEY);
-            } else {
-                document.getElementById('errorDiv').style.display = 'block';
-                document.getElementById('errorDiv').innerHTML = 'Invalid API key. Please refresh and enter a valid key starting with sk-ant-';
-            }
+        // Check if API key is loaded
+        if (!window.CLAUDE_API_KEY) {
+            document.getElementById('errorDiv').style.display = 'block';
+            document.getElementById('errorDiv').innerHTML = 'Error: API key not found. Make sure config.js file exists and contains your API key.';
         }
 
         const messagesDiv = document.getElementById('messages');
@@ -290,8 +286,8 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
-            if (!CLAUDE_API_KEY) {
-                showError('API key not configured. Please refresh the page and enter your API key.');
+            if (!window.CLAUDE_API_KEY) {
+                showError('API key not configured. Check your config.js file.');
                 return;
             }
 
@@ -308,13 +304,16 @@
             errorDiv.style.display = 'none';
 
             try {
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                // Use a CORS proxy to avoid GitHub Pages restrictions
+                const proxyUrl = 'https://corsproxy.io/?';
+                const targetUrl = 'https://api.anthropic.com/v1/messages';
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': CLAUDE_API_KEY,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerous-direct-browser-access': 'true'
+                        'x-api-key': window.CLAUDE_API_KEY,
+                        'anthropic-version': '2023-06-01'
                     },
                     body: JSON.stringify({
                         model: 'claude-3-5-sonnet-20241022',
